@@ -19,6 +19,8 @@ public class ClassAnalyzer {
             // Extract information about the class
             extractClassInformation(cls);
 
+            System.out.println();
+
             // Invoke static methods annotated with @Test
             invokeTestMethods(cls);
         } catch (Exception e) {
@@ -38,12 +40,34 @@ public class ClassAnalyzer {
 
     private static void invokeTestMethods(Class<?> cls) throws Exception {
         Method[] methods = cls.getDeclaredMethods();
+        int testIndex = 0;
         for (Method method : methods) {
             if (method.isAnnotationPresent(Test.class) && Modifier.isStatic(method.getModifiers()) && method.getParameterCount() == 0) {
-                System.out.println("Invoking @Test method: " + method.getName());
-                method.setAccessible(true);
-                method.invoke(null);
+                testIndex = runTest(method, testIndex);
             }
         }
+    }
+
+    private static int runTest(Method method, int testIndex) {
+        testIndex++;
+        System.out.println("Invoking @Test method: " + method.getName());
+        method.setAccessible(true);
+
+        boolean ok = true;
+
+        try {
+            method.invoke(null);
+        } catch (Throwable e) {
+            System.out.println("Test " + testIndex + " failed!");
+            ok = false;
+        }
+
+        if (ok) {
+            System.out.println("Test " + testIndex + " passed!");
+        }
+
+        System.out.println();
+
+        return testIndex;
     }
 }
